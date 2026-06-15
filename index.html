@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Rosé Studio</title>
+
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#E8889B" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Rosé Studio" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --blush:#FFF5F7; --blush-2:#FFE9EF; --surface:#FFFFFF;
+  --rose:#E8889B; --rose-deep:#D6607A; --rose-ink:#5A2A3A; --rose-soft:#C9A0A6;
+  --gold:#D4A574; --gold-deep:#C18A57;
+  --line:rgba(214,96,122,.14); --shadow:0 10px 30px rgba(214,96,122,.16);
+  --shadow-sm:0 4px 14px rgba(214,96,122,.12); --radius:26px; --radius-sm:18px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{font-family:"Quicksand",system-ui,sans-serif;color:var(--rose-ink);
+  background:radial-gradient(120% 80% at 50% -10%, var(--blush-2) 0%, var(--blush) 55%) fixed;
+  min-height:100dvh;padding:max(env(safe-area-inset-top),14px) 16px calc(env(safe-area-inset-bottom) + 28px);
+  max-width:560px;margin:0 auto;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+.hidden{display:none !important}
+.serif{font-family:"Fraunces",serif}
+
+.bar{display:flex;align-items:center;gap:12px;padding:8px 4px 18px}
+.bar .back{font-size:22px;width:42px;height:42px;border-radius:50%;background:var(--surface);
+  box-shadow:var(--shadow-sm);display:grid;place-items:center;color:var(--rose-deep);flex:0 0 auto}
+.bar h1{font-family:"Fraunces",serif;font-weight:600;font-size:25px;margin:0;line-height:1.1;flex:1}
+.bar h1 .sub{display:block;font-family:"Quicksand";font-weight:600;font-size:12px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--rose-soft);margin-bottom:3px}
+.iconbtn{width:42px;height:42px;border-radius:50%;background:var(--surface);box-shadow:var(--shadow-sm);
+  display:grid;place-items:center;font-size:17px;flex:0 0 auto}
+
+.banner{background:linear-gradient(135deg,#FFF3D6,#FFE7C2);color:#7a5320;border-radius:16px;
+  padding:11px 14px;font-size:12.5px;font-weight:600;line-height:1.45;margin:0 0 14px;border:1px solid rgba(193,138,87,.22)}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.tile{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:18px 16px 16px;position:relative;overflow:hidden;border:1px solid var(--line);transition:transform .12s ease}
+.tile:active{transform:scale(.97)}
+.tile .accent{position:absolute;inset:0 0 auto 0;height:6px;background:var(--rose)}
+.acct-name{font-family:"Fraunces",serif;font-weight:600;font-size:20px;margin:10px 0 1px}
+.acct-user{font-size:12.5px;color:var(--rose-soft);font-weight:600}
+.acct-foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
+.chip{font-size:11.5px;font-weight:700;padding:5px 10px;border-radius:999px;background:var(--blush-2);color:var(--rose-deep)}
+.chip.done{background:linear-gradient(135deg,#F6E2C4,#EAC79A);color:#7a5320}
+
+.ring{width:46px;height:46px;position:relative;flex:0 0 auto}
+.ring svg{transform:rotate(-90deg)}
+.ring .heart{position:absolute;inset:0;display:grid;place-items:center;font-size:15px}
+
+.cat{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);
+  border:1px solid var(--line);padding:16px;margin-bottom:14px;overflow:hidden}
+.cat.complete{background:linear-gradient(135deg,#FFFDF8,#FFF6E9)}
+.cat-top{display:flex;align-items:center;gap:13px}
+.cat-emoji{width:48px;height:48px;border-radius:16px;background:var(--blush-2);display:grid;place-items:center;font-size:23px;flex:0 0 auto}
+.cat.complete .cat-emoji{background:#F6E7CC}
+.cat-title{font-family:"Fraunces",serif;font-weight:600;font-size:19px;margin:0}
+.cat-meta{font-size:12.5px;color:var(--rose-soft);font-weight:600;margin-top:1px}
+.cat-count{margin-left:auto;font-family:"Fraunces",serif;font-size:22px;font-weight:600;color:var(--rose-deep)}
+.cat.complete .cat-count{color:var(--gold-deep)}
+.cat-actions{display:flex;gap:10px;margin-top:14px}
+.btn{flex:1;border-radius:14px;padding:12px;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:7px;transition:transform .1s ease}
+.btn:active{transform:scale(.96)}
+.btn-open{background:linear-gradient(135deg,var(--rose),var(--rose-deep));color:#fff;box-shadow:var(--shadow-sm)}
+.btn-open[disabled]{background:#EBD7DD;color:#B79AA2;box-shadow:none}
+.stepper{display:flex;align-items:center;background:var(--blush-2);border-radius:14px;overflow:hidden;flex:0 0 auto}
+.stepper button{width:46px;height:46px;font-size:24px;font-weight:600;color:var(--rose-deep)}
+.stepper button:active{background:#FBD7E1}
+.stepper .v{min-width:30px;text-align:center;font-weight:700;font-size:16px}
+.progress-track{height:8px;border-radius:99px;background:var(--blush-2);margin-top:14px;overflow:hidden}
+.progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--rose),var(--rose-deep));transition:width .3s ease}
+.cat.complete .progress-fill{background:linear-gradient(90deg,var(--gold),var(--gold-deep))}
+
+.empty{text-align:center;padding:48px 24px;color:var(--rose-soft)}
+.empty .big{font-size:46px;margin-bottom:8px}
+.empty h2{font-family:"Fraunces",serif;color:var(--rose-ink);font-weight:600;margin:0 0 6px}
+.empty p{margin:0 0 18px;font-weight:500}
+
+.screen{min-height:78dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;padding:20px}
+.logo{font-size:54px;margin-bottom:4px}
+.screen h2{font-family:"Fraunces",serif;font-weight:600;font-size:28px;margin:0}
+.screen p{color:var(--rose-soft);font-weight:600;max-width:330px;line-height:1.55;margin:4px 0 18px}
+.screen .card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--line);padding:22px;width:100%;max-width:360px}
+
+input[type=text],input[type=url],input[type=number],input[type=password]{
+  width:100%;padding:14px;border-radius:14px;border:1.5px solid var(--line);background:var(--blush);
+  font-family:inherit;font-size:16px;font-weight:600;color:var(--rose-ink);text-align:center}
+.cat-edit input,.panel input{text-align:left}
+input:focus{outline:none;border-color:var(--rose)}
+.code-in{letter-spacing:.3em;font-size:22px}
+
+.btn-primary{display:block;width:100%;padding:15px;border-radius:16px;font-weight:700;font-size:15px;
+  background:linear-gradient(135deg,var(--rose),var(--rose-deep));color:#fff;box-shadow:var(--shadow-sm);margin-top:14px}
+.btn-ghost{display:block;width:100%;padding:13px;border-radius:14px;font-weight:700;font-size:14px;background:var(--blush-2);color:var(--rose-deep);margin-top:10px}
+.btn-danger{color:#C0345A;background:#FBE2E8}
+
+.seg{display:flex;background:var(--blush-2);border-radius:14px;padding:4px;margin:0 0 16px}
+.seg button{flex:1;padding:10px;border-radius:11px;font-weight:700;font-size:13.5px;color:var(--rose-soft)}
+.seg button.on{background:var(--surface);color:var(--rose-deep);box-shadow:var(--shadow-sm)}
+.panel{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--line);padding:18px;margin-bottom:14px}
+.panel h3{font-family:"Fraunces",serif;font-weight:600;font-size:17px;margin:0 0 4px}
+.panel p.hint{font-size:12.5px;color:var(--rose-soft);font-weight:500;margin:0 0 14px;line-height:1.5}
+label.fld{display:block;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--rose-soft);margin:12px 0 6px}
+.cat-edit{border:1.5px solid var(--line);border-radius:16px;padding:12px;margin-top:12px;background:var(--blush)}
+.cat-edit .ce-head{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;margin-bottom:4px}
+.list-row{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:var(--blush);margin-bottom:10px}
+.list-row .dot{width:14px;height:14px;border-radius:50%;flex:0 0 auto}
+.list-row .nm{font-weight:700;flex:1}
+.list-row .nm small{display:block;font-weight:600;color:var(--rose-soft);font-size:11.5px}
+.list-row .ed{font-size:13px;font-weight:700;color:var(--rose-deep);padding:7px 12px;border-radius:10px;background:#fff;box-shadow:var(--shadow-sm)}
+.swatches{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+.swatch{width:34px;height:34px;border-radius:50%;border:3px solid transparent}
+.swatch.sel{border-color:var(--rose-ink)}
+.check{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:13px;background:var(--blush);margin-top:8px;font-weight:600}
+.check input{width:22px;height:22px;accent-color:var(--rose-deep);flex:0 0 auto}
+
+.ov{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--line);padding:16px;margin-bottom:14px}
+.ov-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.ov-top .dot{width:12px;height:12px;border-radius:50%}
+.ov-top .nm{font-family:"Fraunces",serif;font-weight:600;font-size:18px;flex:1}
+.ov-top .nm small{display:block;font-family:"Quicksand";font-weight:600;font-size:11.5px;color:var(--rose-soft)}
+.mini-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
+.mini{background:var(--blush);border-radius:13px;padding:9px 6px;text-align:center}
+.mini.done{background:linear-gradient(135deg,#FBF1DF,#F4E3C5)}
+.mini .lab{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--rose-soft)}
+.mini .val{font-family:"Fraunces",serif;font-weight:600;font-size:16px;color:var(--rose-deep);margin-top:2px}
+.mini.done .val{color:var(--gold-deep)}
+
+.note{font-size:12px;color:var(--rose-soft);font-weight:500;text-align:center;margin-top:18px;line-height:1.6}
+.mono{font-family:ui-monospace,Menlo,monospace;background:rgba(193,138,87,.16);padding:1px 6px;border-radius:6px;font-size:.92em}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--rose-ink);color:#fff;
+  padding:12px 20px;border-radius:999px;font-weight:600;font-size:14px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.25s;z-index:50;max-width:90%}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+<div id="app"><div class="screen"><div class="logo">🌷</div><p>Loading…</p></div></div>
+<div id="toast"></div>
+
+<script src="firebase-config.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, setDoc, onSnapshot, increment }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ---------- constants ---------- */
+const CATS = [
+  {key:"stories", label:"Stories", emoji:"📸"},
+  {key:"posts",   label:"Posts",   emoji:"🖼️"},
+  {key:"reels",   label:"Reels",   emoji:"🎬"},
+  {key:"others",  label:"Others",  emoji:"✨"},
+];
+const COLORS = ["#E8889B","#D6607A","#C9A0E0","#F0A6C0","#E5A57E","#B98BD9","#7EC4C4","#E88FB0"];
+const LIVE = new Set(["loading","dash","account"]);
+
+/* ---------- backend selection ----------
+   No Firebase keys yet  -> DEMO MODE (saved on this device, works instantly).
+   Firebase keys present  -> LIVE MODE (shared across every phone).            */
+const FC = window.FIREBASE_CONFIG;
+const USE_FB = !!(FC && !/PASTE/.test(FC.apiKey || "PASTE"));
+let backend = USE_FB ? "fb" : "local";
+let db, auth, progUnsub = null;
+
+/* ---------- state ---------- */
+let cfg = null;
+let prog = {byAccount:{}};
+let session = readSession();
+let route = {name:"loading"};
+let today = todayStr();
+let adminTab = "overview";
+
+/* ---------- helpers ---------- */
+const $ = (s,el=document)=>el.querySelector(s);
+const uid=()=>"x"+Math.random().toString(36).slice(2,8);
+const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function todayStr(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),1900);}
+function readSession(){try{return JSON.parse(localStorage.getItem("rs.session")||"null");}catch(e){return null;}}
+function saveSession(){localStorage.setItem("rs.session",JSON.stringify(session));}
+function logout(){session=null;localStorage.removeItem("rs.session");route={name:"login"};render();}
+
+function getCount(a,c){return (prog.byAccount[a]&&prog.byAccount[a][c])||0;}
+function acctTotals(a){let g=0,d=0;CATS.forEach(c=>{const goal=a.goals?.[c.key]||0;g+=goal;d+=Math.min(getCount(a.id,c.key),goal);});return{goal:g,done:d};}
+function visibleAccounts(){
+  if(!cfg)return[];
+  if(session?.role==="admin")return cfg.accounts||[];
+  const u=(cfg.users||[]).find(x=>x.id===session?.userId);
+  return u?(cfg.accounts||[]).filter(a=>(u.accountIds||[]).includes(a.id)):[];
+}
+function currentUserName(){
+  if(session?.role==="admin")return "Manager";
+  return (cfg?.users||[]).find(u=>u.id===session?.userId)?.name||"Team";
+}
+
+/* ============================================================ DATA LAYER */
+if(USE_FB) bootFB(); else bootLocal();
+
+async function bootFB(){
+  try{
+    const app=initializeApp(FC); auth=getAuth(app); db=getFirestore(app);
+    await signInAnonymously(auth);
+    onSnapshot(doc(db,"studio","config"),
+      s=>applyConfig(s.exists()?s.data():null),
+      err=>{route={name:"error",msg:err.message};render();});
+    subscribeProgressFB();
+  }catch(e){ route={name:"error",msg:e.message}; render(); }
+}
+function subscribeProgressFB(){
+  today=todayStr(); if(progUnsub)progUnsub();
+  progUnsub=onSnapshot(doc(db,"studio","progress-"+today), s=>applyProgress(s.exists()?s.data():null));
+}
+function bootLocal(){
+  applyConfig(localCfg());
+  applyProgress(localProg());
+  window.addEventListener("storage",e=>{
+    if(e.key==="rs.cfg")applyConfig(localCfg());
+    if(e.key && e.key.indexOf("rs.prog-")===0)applyProgress(localProg());
+  });
+}
+function localCfg(){try{return JSON.parse(localStorage.getItem("rs.cfg")||"null");}catch(e){return null;}}
+function localProg(){try{return JSON.parse(localStorage.getItem("rs.prog-"+todayStr())||"null");}catch(e){return null;}}
+
+function applyConfig(data){
+  if(!data){ cfg=null;
+    if(["loading","login","needconfig","error","bootstrap"].includes(route.name)) route={name:"bootstrap"};
+    render(); return;
+  }
+  cfg=data; routeAfterConfig();
+  if(!["editAcct","editUser"].includes(route.name)) render();
+}
+function applyProgress(data){ prog=data||{byAccount:{}}; if(!prog.byAccount)prog.byAccount={}; if(LIVE.has(route.name))render(); }
+
+function routeAfterConfig(){
+  if(["loading","bootstrap","needconfig","error"].includes(route.name)){
+    if(!session) route={name:"login"};
+    else if(session.role==="emp" && !(cfg.users||[]).some(u=>u.id===session.userId)) route={name:"login"};
+    else route={name:"dash"};
+  }
+  if(route.name==="login" && session &&
+     (session.role==="admin" || (cfg.users||[]).some(u=>u.id===session.userId))) route={name:"dash"};
+}
+
+async function saveConfig(){
+  if(backend==="fb"){ try{ await setDoc(doc(db,"studio","config"), cfg); }catch(e){ toast("Save failed"); } }
+  else { localStorage.setItem("rs.cfg", JSON.stringify(cfg)); applyConfig(cfg); }
+}
+async function createStudio(code){
+  cfg={adminCode:code, accounts:[], users:[]}; session={role:"admin"}; saveSession();
+  await saveConfig();
+}
+async function tick(accId,cat,d){
+  if(d<0 && getCount(accId,cat)<=0) return;
+  prog.byAccount[accId]=prog.byAccount[accId]||{};
+  prog.byAccount[accId][cat]=Math.max(0,(prog.byAccount[accId][cat]||0)+d);
+  render();
+  if(backend==="fb"){
+    try{ await setDoc(doc(db,"studio","progress-"+today),
+      {date:today, byAccount:{[accId]:{[cat]:increment(d)}}}, {merge:true}); }
+    catch(e){ toast("Couldn’t sync — check connection"); }
+  } else { prog.date=today; localStorage.setItem("rs.prog-"+today, JSON.stringify(prog)); }
+}
+
+/* ============================================================ RENDER */
+function render(){
+  const app=$("#app");
+  const v={
+    loading:viewLoading, error:viewError, bootstrap:viewBootstrap, login:viewLogin,
+    dash:()=>session?.role==="admin"?viewAdminDash():viewEmployeeDash(),
+    account:()=>viewAccount(route.accId),
+    admin:viewAdmin, editAcct:()=>viewEditAcct(route.accId), editUser:()=>viewEditUser(route.userId)
+  }[route.name] || viewLoading;
+  app.innerHTML=v(); bind(); window.scrollTo(0,0);
+}
+function ring(done,goal){
+  const pct=goal>0?done/goal:0,r=19,c=2*Math.PI*r,off=c*(1-pct),full=goal>0&&done>=goal;
+  return `<div class="ring"><svg width="46" height="46" viewBox="0 0 46 46">
+    <circle cx="23" cy="23" r="${r}" fill="none" stroke="#FCE3EA" stroke-width="5"/>
+    <circle cx="23" cy="23" r="${r}" fill="none" stroke="${full?'var(--gold)':'var(--rose-deep)'}" stroke-width="5"
+      stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"/></svg>
+    <div class="heart">${full?'💛':'🩷'}</div></div>`;
+}
+const userChip=()=>`<button class="iconbtn" id="who">${session?.role==="admin"?'👑':'🙋‍♀️'}</button>`;
+const demoBanner=()=> backend==="fb" ? "" :
+  `<div class="banner">✨ Demo mode — everything is saved on this device. To sync across all phones and get your live overview, paste your Firebase keys into <span class="mono">firebase-config.js</span> (see README).</div>`;
+
+/* ---------- transient screens ---------- */
+function viewLoading(){return `<div class="screen"><div class="logo">🌷</div><p>Loading…</p></div>`;}
+function viewError(){return `<div class="screen"><div class="logo">💔</div><h2>Connection problem</h2>
+  <p>${esc(route.msg||"Something went wrong.")}</p>
+  <p>Check Firestore + Anonymous auth are on and the rules are published (README step 2).</p></div>`;}
+function viewBootstrap(){return `<div class="screen"><div class="logo">🌷</div><h2>Create your studio</h2>
+  <p>You’re the first to open this. Set a manager code — you’ll use it to log in and manage everything.</p>
+  <div class="card">
+    <input type="password" id="ac1" class="code-in" inputmode="numeric" placeholder="Manager code"/>
+    <input type="password" id="ac2" class="code-in" inputmode="numeric" placeholder="Repeat code" style="margin-top:10px"/>
+    <button class="btn-primary" id="createBtn">Create studio</button>
+  </div></div>`;}
+function viewLogin(){return `<div class="screen"><div class="logo">🌷</div><h2>Rosé Studio</h2>
+  <p>Enter your access code to see your accounts.</p>
+  <div class="card">
+    <input type="password" id="loginCode" class="code-in" inputmode="numeric" placeholder="• • • •"/>
+    <button class="btn-primary" id="loginBtn">Enter</button>
+    <p class="note">Don’t have a code? Ask your manager.</p>
+  </div></div>`;}
+
+/* ---------- employee dashboard ---------- */
+function viewEmployeeDash(){
+  const accts=visibleAccounts();
+  let body = accts.length===0
+    ? `<div class="empty"><div class="big">🌸</div><h2>No accounts assigned</h2><p>Your manager hasn’t linked an account to your code yet.</p></div>`
+    : `<div class="grid">`+accts.map(a=>{
+        const {goal,done}=acctTotals(a),full=goal>0&&done>=goal;
+        return `<div class="tile" data-acct="${a.id}"><div class="accent" style="background:${a.color||'var(--rose)'}"></div>
+          <div class="acct-name">${esc(a.name)}</div>
+          <div class="acct-user">${a.username?('@'+esc(a.username)):'&nbsp;'}</div>
+          <div class="acct-foot"><span class="chip ${full?'done':''}">${full?'All done':done+' / '+goal}</span>${ring(done,goal)}</div></div>`;
+      }).join("")+`</div>`;
+  return `<div class="bar"><h1><span class="sub">Hi ${esc(currentUserName())} · ${today}</span>Today’s posts</h1>${userChip()}</div>
+    ${demoBanner()}${body}<p class="note">Tap an account to open its folders and tick off what you post.</p>`;
+}
+
+/* ---------- account detail ---------- */
+function viewAccount(accId){
+  const a=(cfg.accounts||[]).find(x=>x.id===accId);
+  if(!a){route={name:"dash"};return render(),"";}
+  const {goal,done}=acctTotals(a);
+  const cards=CATS.map(c=>{
+    const g=a.goals?.[c.key]||0,n=getCount(a.id,c.key),link=a.links?.[c.key]||"",ok=g>0&&n>=g,pct=g>0?Math.min(100,n/g*100):0;
+    return `<div class="cat ${ok?'complete':''}"><div class="cat-top">
+        <div class="cat-emoji">${c.emoji}</div>
+        <div><h3 class="cat-title">${c.label}</h3><div class="cat-meta">${g>0?('Goal · '+g+' to post'):'No goal set'}</div></div>
+        <div class="cat-count">${ok?'✓':(g>0?(n+'/'+g):n)}</div></div>
+      ${g>0?`<div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>`:''}
+      <div class="cat-actions">
+        <button class="btn btn-open" ${link?'':'disabled'} data-open="${esc(link)}">📂 Open folder</button>
+        <div class="stepper"><button data-step="-1" data-cat="${c.key}" data-acct="${a.id}">−</button>
+          <span class="v">${n}</span><button data-step="1" data-cat="${c.key}" data-acct="${a.id}">+</button></div>
+      </div></div>`;
+  }).join("");
+  return `<div class="bar"><button class="back" data-go="dash">‹</button>
+    <h1><span class="sub">${a.username?('@'+esc(a.username)):'Account'} · ${done}/${goal} today</span>${esc(a.name)}</h1></div>
+    ${cards}<p class="note">“Open folder” takes you to the content. Post it, then tap + to log it.</p>`;
+}
+
+/* ---------- admin dashboard (live overview) ---------- */
+function viewAdminDash(){
+  const accts=cfg.accounts||[];
+  let body = accts.length===0
+    ? `<div class="empty"><div class="big">🌷</div><h2>Set up your accounts</h2><p>Add accounts and goals, then create codes for your team.</p>
+       <button class="btn-primary" data-go="admin" style="max-width:240px;margin:0 auto">Open setup</button></div>`
+    : accts.map(a=>{
+        const {goal,done}=acctTotals(a);
+        const minis=CATS.map(c=>{const g=a.goals?.[c.key]||0,n=getCount(a.id,c.key),ok=g>0&&n>=g;
+          return `<div class="mini ${ok?'done':''}"><div class="lab">${c.label}</div><div class="val">${g>0?(n+'/'+g):'–'}</div></div>`;}).join("");
+        return `<div class="ov" data-acct="${a.id}"><div class="ov-top"><span class="dot" style="background:${a.color}"></span>
+          <span class="nm">${esc(a.name)}<small>${a.username?('@'+esc(a.username)):''}</small></span>${ring(done,goal)}</div>
+          <div class="mini-grid">${minis}</div></div>`;
+      }).join("");
+  return `<div class="bar"><h1><span class="sub">Live · ${today}</span>All accounts</h1>
+    <button class="iconbtn" data-go="admin">⚙️</button>${userChip()}</div>
+    ${demoBanner()}${body}<p class="note">Updates as your team posts. Tap an account to tick items yourself.</p>`;
+}
+
+/* ---------- admin setup ---------- */
+function viewAdmin(){
+  const seg=`<div class="seg">
+    <button data-tab="overview" class="${adminTab==='overview'?'on':''}">Accounts</button>
+    <button data-tab="team" class="${adminTab==='team'?'on':''}">Team</button>
+    <button data-tab="studio" class="${adminTab==='studio'?'on':''}">Studio</button></div>`;
+  let panel="";
+  if(adminTab==="overview"){
+    const list=(cfg.accounts||[]).length?(cfg.accounts).map(a=>`<div class="list-row">
+        <span class="dot" style="background:${a.color}"></span>
+        <span class="nm">${esc(a.name)}<small>${a.username?('@'+esc(a.username)+' · '):''}${CATS.reduce((s,c)=>s+(a.goals?.[c.key]||0),0)} posts/day</small></span>
+        <button class="ed" data-edita="${a.id}">Edit</button></div>`).join(""):`<p class="hint">No accounts yet.</p>`;
+    panel=`<div class="panel"><h3>Accounts & goals</h3><p class="hint">Each account has 4 folders and a daily goal per type.</p>${list}
+      <button class="btn-ghost" data-edita="new">＋ Add account</button></div>`;
+  }else if(adminTab==="team"){
+    const list=(cfg.users||[]).length?(cfg.users).map(u=>{
+      const names=(u.accountIds||[]).map(id=>(cfg.accounts||[]).find(a=>a.id===id)?.name).filter(Boolean);
+      return `<div class="list-row"><span class="dot" style="background:var(--rose)"></span>
+        <span class="nm">${esc(u.name)}<small>code ${esc(u.code)} · ${names.length} account${names.length!==1?'s':''}${names.length?(' · '+esc(names.join(', '))):''}</small></span>
+        <button class="ed" data-editu="${u.id}">Edit</button></div>`;}).join(""):`<p class="hint">No team members yet.</p>`;
+    panel=`<div class="panel"><h3>Team & access</h3>
+      <p class="hint">Give each person a code and pick which accounts they see. One device, one code — the 10-phone person gets all 10 accounts; each girl gets her one.</p>${list}
+      <button class="btn-ghost" data-editu="new">＋ Add team member</button></div>`;
+  }else{
+    panel=`<div class="panel"><h3>Manager code</h3><p class="hint">Used to log in to this overview. Keep it private.</p>
+      <input type="text" id="newAdminCode" inputmode="numeric" placeholder="Type a new code to change it"/>
+      <button class="btn-ghost" id="saveAdminCode">Save manager code</button></div>
+    <div class="panel"><h3>This device</h3><p class="hint">Logged in as <b>${esc(currentUserName())}</b>. Mode: <b>${backend==="fb"?"Live sync":"Demo (this device)"}</b>.</p>
+      <button class="btn-ghost btn-danger" id="logoutBtn">Log out</button></div>`;
+  }
+  return `<div class="bar"><button class="back" data-go="dash">‹</button><h1><span class="sub">Setup</span>Manage studio</h1></div>${seg}${panel}
+    <p class="note">${backend==="fb"?"Everything syncs live to every phone.":"Add Firebase keys to sync across phones."}</p>`;
+}
+
+function viewEditAcct(accId){
+  const isNew=accId==="new";
+  const a=isNew?{id:uid(),name:"",username:"",color:COLORS[(cfg.accounts||[]).length%COLORS.length],links:{},goals:{}}
+               :JSON.parse(JSON.stringify((cfg.accounts).find(x=>x.id===accId)));
+  const sw=COLORS.map(col=>`<button type="button" class="swatch ${col===a.color?'sel':''}" data-color="${col}" style="background:${col}"></button>`).join("");
+  const fields=CATS.map(c=>`<div class="cat-edit"><div class="ce-head">${c.emoji} ${c.label}</div>
+    <label class="fld">Drive / OneDrive folder link</label>
+    <input type="url" data-link="${c.key}" placeholder="https://drive.google.com/..." value="${esc(a.links?.[c.key]||'')}"/>
+    <label class="fld">Daily goal</label>
+    <input type="number" min="0" data-goal="${c.key}" value="${a.goals?.[c.key]||0}"/></div>`).join("");
+  return `<div class="bar"><button class="back" data-back-admin="overview">‹</button>
+    <h1><span class="sub">${isNew?'New account':'Editing'}</span>${isNew?'Add account':esc(a.name||'Account')}</h1></div>
+    <form id="acctForm" data-id="${a.id}" data-new="${isNew}">
+      <div class="panel"><label class="fld">Display name (e.g. Mia1)</label><input type="text" id="fName" value="${esc(a.name)}" placeholder="Mia1"/>
+        <label class="fld">Instagram username (optional)</label><input type="text" id="fUser" value="${esc(a.username)}" placeholder="mia.rose"/>
+        <label class="fld">Tile colour</label><div class="swatches">${sw}</div><input type="hidden" id="fColor" value="${a.color}"/></div>
+      <div class="panel"><h3>Folders & daily goals</h3><p class="hint">Goal 0 hides that type from the count.</p>${fields}</div>
+      <button type="submit" class="btn-primary">Save account</button>
+      ${isNew?'':'<button type="button" class="btn-ghost btn-danger" id="delAcct">Delete account</button>'}
+    </form>`;
+}
+
+function viewEditUser(userId){
+  const isNew=userId==="new";
+  const u=isNew?{id:uid(),name:"",code:"",accountIds:[]}:JSON.parse(JSON.stringify((cfg.users).find(x=>x.id===userId)));
+  const checks=(cfg.accounts||[]).length?(cfg.accounts).map(a=>`<label class="check">
+      <input type="checkbox" data-acc="${a.id}" ${(u.accountIds||[]).includes(a.id)?'checked':''}/>
+      <span class="dot" style="background:${a.color}"></span>${esc(a.name)} ${a.username?('<small style="color:var(--rose-soft)">@'+esc(a.username)+'</small>'):''}</label>`).join("")
+      :`<p class="hint">Add accounts first, then assign them here.</p>`;
+  return `<div class="bar"><button class="back" data-back-admin="team">‹</button>
+    <h1><span class="sub">${isNew?'New member':'Editing'}</span>${isNew?'Add team member':esc(u.name||'Member')}</h1></div>
+    <form id="userForm" data-id="${u.id}" data-new="${isNew}">
+      <div class="panel"><label class="fld">Name</label><input type="text" id="uName" value="${esc(u.name)}" placeholder="e.g. Sofia"/>
+        <label class="fld">Access code</label><input type="text" id="uCode" inputmode="numeric" value="${esc(u.code)}" placeholder="e.g. 4821"/></div>
+      <div class="panel"><h3>Accounts they can see</h3><p class="hint">Tick the tiles that should appear on this person’s dashboard.</p>${checks}</div>
+      <button type="submit" class="btn-primary">Save team member</button>
+      ${isNew?'':'<button type="button" class="btn-ghost btn-danger" id="delUser">Remove member</button>'}
+    </form>`;
+}
+
+/* ============================================================ BIND */
+function bind(){
+  document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{route={name:b.dataset.go};render();});
+  document.querySelectorAll("[data-acct]").forEach(t=>t.onclick=()=>{route={name:"account",accId:t.dataset.acct};render();});
+  document.querySelectorAll("[data-open]").forEach(b=>{if(!b.disabled)b.onclick=()=>{const u=b.dataset.open;if(u)window.open(u,"_blank","noopener");};});
+  document.querySelectorAll("[data-step]").forEach(b=>b.onclick=()=>tick(b.dataset.acct,b.dataset.cat,+b.dataset.step));
+  if($("#who"))$("#who").onclick=()=>{if(confirm("Log out of "+currentUserName()+"?"))logout();};
+
+  if($("#createBtn"))$("#createBtn").onclick=()=>{const a=$("#ac1").value.trim(),b=$("#ac2").value.trim();
+    if(a.length<3)return toast("Use at least 3 characters");if(a!==b)return toast("Codes don’t match");createStudio(a);};
+  if($("#loginBtn")){const go=()=>tryLogin($("#loginCode").value);$("#loginBtn").onclick=go;$("#loginCode").onkeydown=e=>{if(e.key==="Enter")go();};}
+
+  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{adminTab=b.dataset.tab;render();});
+  document.querySelectorAll("[data-edita]").forEach(b=>b.onclick=()=>{route={name:"editAcct",accId:b.dataset.edita};render();});
+  document.querySelectorAll("[data-editu]").forEach(b=>b.onclick=()=>{route={name:"editUser",userId:b.dataset.editu};render();});
+  document.querySelectorAll("[data-back-admin]").forEach(b=>b.onclick=()=>{adminTab=b.dataset.backAdmin;route={name:"admin"};render();});
+  if($("#saveAdminCode"))$("#saveAdminCode").onclick=()=>{const v=$("#newAdminCode").value.trim();if(v.length<3)return toast("Too short");cfg.adminCode=v;saveConfig();toast("Manager code updated");};
+  if($("#logoutBtn"))$("#logoutBtn").onclick=()=>{if(confirm("Log out?"))logout();};
+
+  const af=$("#acctForm");
+  if(af){
+    af.querySelectorAll(".swatch").forEach(s=>s.onclick=()=>{af.querySelectorAll(".swatch").forEach(x=>x.classList.remove("sel"));s.classList.add("sel");$("#fColor").value=s.dataset.color;});
+    af.onsubmit=e=>{e.preventDefault();const id=af.dataset.id,isNew=af.dataset.new==="true";
+      const acc={id,name:$("#fName").value.trim()||"Untitled",username:$("#fUser").value.trim().replace(/^@/,""),color:$("#fColor").value,links:{},goals:{}};
+      CATS.forEach(c=>{acc.links[c.key]=af.querySelector(`[data-link="${c.key}"]`).value.trim();acc.goals[c.key]=Math.max(0,parseInt(af.querySelector(`[data-goal="${c.key}"]`).value)||0);});
+      cfg.accounts=cfg.accounts||[];if(isNew)cfg.accounts.push(acc);else cfg.accounts[cfg.accounts.findIndex(x=>x.id===id)]=acc;
+      saveConfig();toast("Saved");adminTab="overview";route={name:"admin"};render();};
+    if($("#delAcct"))$("#delAcct").onclick=()=>{if(confirm("Delete this account?")){
+      cfg.accounts=cfg.accounts.filter(x=>x.id!==af.dataset.id);
+      (cfg.users||[]).forEach(u=>u.accountIds=(u.accountIds||[]).filter(id=>id!==af.dataset.id));
+      saveConfig();toast("Deleted");adminTab="overview";route={name:"admin"};render();}};
+  }
+  const uf=$("#userForm");
+  if(uf){
+    uf.onsubmit=e=>{e.preventDefault();const id=uf.dataset.id,isNew=uf.dataset.new==="true";const code=$("#uCode").value.trim();
+      if(!code)return toast("Give them a code");
+      if(code===cfg.adminCode)return toast("That’s the manager code — pick another");
+      if((cfg.users||[]).some(u=>u.code===code&&u.id!==id))return toast("Code already used");
+      const usr={id,name:$("#uName").value.trim()||"Member",code,accountIds:[...uf.querySelectorAll('[data-acc]:checked')].map(x=>x.dataset.acc)};
+      cfg.users=cfg.users||[];if(isNew)cfg.users.push(usr);else cfg.users[cfg.users.findIndex(x=>x.id===id)]=usr;
+      saveConfig();toast("Saved");adminTab="team";route={name:"admin"};render();};
+    if($("#delUser"))$("#delUser").onclick=()=>{if(confirm("Remove this member?")){
+      cfg.users=cfg.users.filter(x=>x.id!==uf.dataset.id);saveConfig();toast("Removed");adminTab="team";route={name:"admin"};render();}};
+  }
+}
+
+function tryLogin(code){
+  code=(code||"").trim();if(!code)return;
+  if(cfg.adminCode&&code===cfg.adminCode){session={role:"admin"};saveSession();route={name:"dash"};return render();}
+  const u=(cfg.users||[]).find(x=>x.code&&x.code===code);
+  if(u){session={role:"emp",userId:u.id};saveSession();route={name:"dash"};return render();}
+  toast("Code not recognised");
+}
+
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden||todayStr()===today)return;
+  if(backend==="fb")subscribeProgressFB(); else applyProgress(localProg());
+});
+if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("service-worker.js").catch(()=>{}));
+</script>
+</body>
+</html>
