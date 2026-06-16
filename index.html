@@ -210,14 +210,16 @@ function currentUserName(){
 if(USE_FB) bootFB(); else bootLocal();
 
 async function bootFB(){
+  const timeout=setTimeout(()=>{if(route.name==="loading"){route={name:"error",msg:"Firebase timed out. Check your connection and that Anonymous auth + Firestore are enabled."};render();}},10000);
   try{
     const app=initializeApp(FC); auth=getAuth(app); db=getFirestore(app);
     await signInAnonymously(auth);
+    clearTimeout(timeout);
     onSnapshot(doc(db,"studio","config"),
       s=>applyConfig(s.exists()?s.data():null),
       err=>{route={name:"error",msg:err.message};render();});
     subscribeProgressFB();
-  }catch(e){ route={name:"error",msg:e.message}; render(); }
+  }catch(e){ clearTimeout(timeout); route={name:"error",msg:e.message}; render(); }
 }
 function subscribeProgressFB(){
   today=todayStr(); if(progUnsub)progUnsub();
