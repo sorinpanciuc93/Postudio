@@ -208,6 +208,7 @@ function currentUserName(){
 }
 
 /* ============================================================ DATA LAYER */
+setTimeout(()=>{if(route.name==="loading"){route={name:"error",msg:"Timed out — Firebase scripts may be blocked on your network, or Anonymous auth / Firestore is disabled in the Firebase console."};render();}},12000);
 if(USE_FB) bootFB(); else bootLocal();
 
 async function bootFB(){
