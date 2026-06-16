@@ -341,7 +341,7 @@ function viewAccount(accId){
   const tiles=CATS.map(c=>{
     const g=a.goals?.[c.key]||0,n=getCount(a.id,c.key),link=a.links?.[c.key]||””,ok=g>0&&n>=g,pct=g>0?Math.min(100,n/g*100):0;
     return `<div class=”cat-tile ${ok?'complete':''}” ${link?('data-open=”'+esc(link)+'”'):''}>
-      <div class=”ct-top”><div class=”ct-emoji”>${c.emoji}</div>${ok?'<span class=”ct-check”>\u{1F49B}</span>':''}</div>
+      <div class=”ct-top”><div class=”ct-emoji”>${c.emoji}</div>${ok?'<span class=”ct-check”>💛</span>':''}</div>
       <div class=”ct-name”>${c.label}</div>
       <div class=”ct-goal”>${g>0?('Goal · '+g):'No goal'}</div>
       <div class=”ct-count”>${g>0?(n+'/'+g):n}</div>
