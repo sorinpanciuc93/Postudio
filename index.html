@@ -214,20 +214,27 @@ function currentUserName(){
 /* ============================================================ DATA LAYER */
 if(USE_FB) bootFB(); else bootLocal();
 
+function _status(msg){var p=document.querySelector('#app p');if(p)p.textContent=msg;}
 async function bootFB(){
   try{
+    _status('Step 1: loading scripts…');
     const m1=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    _status('Step 2: auth module…');
     const m2=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+    _status('Step 3: firestore module…');
     const m3=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    _status('Step 4: initializing…');
     _doc=m3.doc; _setDoc=m3.setDoc; _onSnapshot=m3.onSnapshot; _increment=m3.increment;
     const app=m1.initializeApp(FC); auth=m2.getAuth(app); db=m3.getFirestore(app);
+    _status('Step 5: signing in…');
     await m2.signInAnonymously(auth);
+    _status('Step 6: loading config…');
     _onSnapshot(_doc(db,"studio","config"),
       s=>applyConfig(s.exists()?s.data():null),
       err=>{route={name:"error",msg:err.message};render();});
     subscribeProgressFB();
   }catch(e){
-    route={name:"error",msg:"Could not load Firebase ("+e.message+"). Check your internet connection and reload."};
+    route={name:"error",msg:"Firebase error at: "+document.querySelector('#app p')?.textContent+" → "+e.message};
     render();
   }
 }
