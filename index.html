@@ -78,6 +78,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .ct-goal{font-size:11px;color:var(--rose-soft);font-weight:600}
 .ct-count{font-family:"Fraunces",serif;font-size:26px;font-weight:600;color:var(--rose-deep);line-height:1;margin:2px 0}
 .cat-tile.complete .ct-count{color:var(--gold-deep)}
+.ct-folder{font-size:16px}
+.folder-cta{margin-top:auto;font-size:12px;font-weight:700;color:var(--rose-deep);background:var(--blush-2);border-radius:12px;padding:11px 8px;text-align:center}
 .progress-track{height:6px;border-radius:99px;background:var(--blush-2);overflow:hidden}
 .progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--rose),var(--rose-deep));transition:width .3s ease}
 .cat-tile.complete .progress-fill{background:linear-gradient(90deg,var(--gold),var(--gold-deep))}
@@ -186,7 +188,7 @@ const CATS = [
   {key:"stories", label:"Stories", emoji:"📸"},
   {key:"posts",   label:"Posts",   emoji:"🖼️"},
   {key:"reels",   label:"Reels",   emoji:"🎬"},
-  {key:"others",  label:"Others",  emoji:"✨"},
+  {key:"others",  label:"Others",  emoji:"✨", noCount:true},
 ];
 const COLORS = ["#E8889B","#D6607A","#C9A0E0","#F0A6C0","#E5A57E","#B98BD9","#7EC4C4","#E88FB0"];
 const LIVE = new Set(["loading","dash","account"]);
@@ -229,7 +231,7 @@ function saveSession(){localStorage.setItem("rs.session",JSON.stringify(session)
 function logout(){session=null;localStorage.removeItem("rs.session");route={name:"login"};render();}
 
 function getCount(a,c){const p=activeProg();return (p.byAccount[a]&&p.byAccount[a][c])||0;}
-function acctTotals(a){let g=0,d=0;CATS.forEach(c=>{const goal=a.goals?.[c.key]||0;g+=goal;d+=Math.min(getCount(a.id,c.key),goal);});return{goal:g,done:d};}
+function acctTotals(a){let g=0,d=0;CATS.forEach(c=>{if(c.noCount)return;const goal=a.goals?.[c.key]||0;g+=goal;d+=Math.min(getCount(a.id,c.key),goal);});return{goal:g,done:d};}
 function visibleAccounts(){
   if(!cfg)return[];
   if(session?.role==="admin")return cfg.accounts||[];
@@ -408,7 +410,17 @@ function viewAccount(accId){
   }
 
   const tiles=CATS.map(c=>{
-    const g=a.goals?.[c.key]||0,n=getCount(a.id,c.key),link=a.links?.[c.key]||"",ok=g>0&&n>=g,pct=g>0?Math.min(100,n/g*100):0;
+    const link=a.links?.[c.key]||"";
+    if(c.noCount){
+      // folder-only tile: no count, no goal, no stepper — just opens the folder
+      return `<div class="cat-tile folder-tile" ${link?('data-open="'+esc(link)+'"'):''}>
+        <div class="ct-top"><div class="ct-emoji">${c.emoji}</div><span class="ct-folder">📂</span></div>
+        <div class="ct-name">${c.label}</div>
+        <div class="ct-goal">Documents</div>
+        <div class="folder-cta">${link?'Tap to open folder':'No folder linked'}</div>
+      </div>`;
+    }
+    const g=a.goals?.[c.key]||0,n=getCount(a.id,c.key),ok=g>0&&n>=g,pct=g>0?Math.min(100,n/g*100):0;
     const cnt = loading ? '…' : (g>0?(n+'/'+g):n);
     return `<div class="cat-tile ${ok?'complete':''}" ${(editable&&link)?('data-open="'+esc(link)+'"'):''}>
         <div class="ct-top"><div class="ct-emoji">${c.emoji}</div>${ok?'<span class="ct-check">💛</span>':''}</div>
@@ -446,7 +458,9 @@ function viewAdminDash(){
        <button class="btn-primary" data-go="admin" style="max-width:240px;margin:0 auto">Open setup</button></div>`
     : accts.map(a=>{
         const {goal,done}=acctTotals(a);
-        const minis=CATS.map(c=>{const g=a.goals?.[c.key]||0,n=getCount(a.id,c.key),ok=g>0&&n>=g;
+        const minis=CATS.map(c=>{
+          if(c.noCount)return `<div class="mini"><div class="lab">${c.label}</div><div class="val">📂</div></div>`;
+          const g=a.goals?.[c.key]||0,n=getCount(a.id,c.key),ok=g>0&&n>=g;
           return `<div class="mini ${ok?'done':''}"><div class="lab">${c.label}</div><div class="val">${g>0?(n+'/'+g):'–'}</div></div>`;}).join("");
         return `<div class="ov" data-acct="${a.id}"><div class="ov-top"><span class="dot" style="background:${a.color}"></span>
           <span class="nm">${esc(a.name)}<small>${a.username?('@'+esc(a.username)):''}</small></span>${ring(done,goal)}</div>
@@ -467,7 +481,7 @@ function viewAdmin(){
   if(adminTab==="overview"){
     const list=(cfg.accounts||[]).length?(cfg.accounts).map(a=>`<div class="list-row">
         <span class="dot" style="background:${a.color}"></span>
-        <span class="nm">${esc(a.name)}<small>${a.username?('@'+esc(a.username)+' · '):''}${CATS.reduce((s,c)=>s+(a.goals?.[c.key]||0),0)} posts/day</small></span>
+        <span class="nm">${esc(a.name)}<small>${a.username?('@'+esc(a.username)+' · '):''}${CATS.reduce((s,c)=>s+(c.noCount?0:(a.goals?.[c.key]||0)),0)} posts/day</small></span>
         <button class="ed" data-edita="${a.id}">Edit</button></div>`).join(""):`<p class="hint">No accounts yet.</p>`;
     panel=`<div class="panel"><h3>Accounts & goals</h3><p class="hint">Each account has 4 folders and a daily goal per type.</p>${list}
       <button class="btn-ghost" data-edita="new">＋ Add account</button></div>`;
@@ -496,11 +510,11 @@ function viewEditAcct(accId){
   const a=isNew?{id:uid(),name:"",username:"",color:COLORS[(cfg.accounts||[]).length%COLORS.length],links:{},goals:{}}
                :JSON.parse(JSON.stringify((cfg.accounts).find(x=>x.id===accId)));
   const sw=COLORS.map(col=>`<button type="button" class="swatch ${col===a.color?'sel':''}" data-color="${col}" style="background:${col}"></button>`).join("");
-  const fields=CATS.map(c=>`<div class="cat-edit"><div class="ce-head">${c.emoji} ${c.label}</div>
+  const fields=CATS.map(c=>`<div class="cat-edit"><div class="ce-head">${c.emoji} ${c.label}${c.noCount?' <small style="color:var(--rose-soft);font-weight:600">· folder only</small>':''}</div>
     <label class="fld">Drive / OneDrive folder link</label>
     <input type="url" data-link="${c.key}" placeholder="https://drive.google.com/..." value="${esc(a.links?.[c.key]||'')}"/>
-    <label class="fld">Daily goal</label>
-    <input type="number" min="0" data-goal="${c.key}" value="${a.goals?.[c.key]||0}"/></div>`).join("");
+    ${c.noCount?'':`<label class="fld">Daily goal</label>
+    <input type="number" min="0" data-goal="${c.key}" value="${a.goals?.[c.key]||0}"/>`}</div>`).join("");
   return `<div class="bar"><button class="back" data-back-admin="overview">‹</button>
     <h1><span class="sub">${isNew?'New account':'Editing'}</span>${isNew?'Add account':esc(a.name||'Account')}</h1></div>
     <form id="acctForm" data-id="${a.id}" data-new="${isNew}">
@@ -563,7 +577,7 @@ function bind(){
     af.querySelectorAll(".swatch").forEach(s=>s.onclick=()=>{af.querySelectorAll(".swatch").forEach(x=>x.classList.remove("sel"));s.classList.add("sel");$("#fColor").value=s.dataset.color;});
     af.onsubmit=e=>{e.preventDefault();const id=af.dataset.id,isNew=af.dataset.new==="true";
       const acc={id,name:$("#fName").value.trim()||"Untitled",username:$("#fUser").value.trim().replace(/^@/,""),color:$("#fColor").value,links:{},goals:{}};
-      CATS.forEach(c=>{acc.links[c.key]=af.querySelector(`[data-link="${c.key}"]`).value.trim();acc.goals[c.key]=Math.max(0,parseInt(af.querySelector(`[data-goal="${c.key}"]`).value)||0);});
+      CATS.forEach(c=>{acc.links[c.key]=af.querySelector(`[data-link="${c.key}"]`).value.trim();const ge=af.querySelector(`[data-goal="${c.key}"]`);acc.goals[c.key]=ge?Math.max(0,parseInt(ge.value)||0):0;});
       cfg.accounts=cfg.accounts||[];if(isNew)cfg.accounts.push(acc);else cfg.accounts[cfg.accounts.findIndex(x=>x.id===id)]=acc;
       saveConfig();toast("Saved");adminTab="overview";route={name:"admin"};render();};
     if($("#delAcct"))$("#delAcct").onclick=()=>{if(confirm("Delete this account?")){
