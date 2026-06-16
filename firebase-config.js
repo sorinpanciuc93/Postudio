@@ -12,10 +12,10 @@
    ============================================================ */
 
 window.FIREBASE_CONFIG = {
-  apiKey:            "PASTE_API_KEY",
-  authDomain:        "PASTE_PROJECT.firebaseapp.com",
-  projectId:         "PASTE_PROJECT_ID",
-  storageBucket:     "PASTE_PROJECT.appspot.com",
-  messagingSenderId: "PASTE_SENDER_ID",
-  appId:             "PASTE_APP_ID"
+  apiKey:            "AIzaSyAtBw3d8QvoLuxOKcCJWV4dMd0cESdmt_A",
+  authDomain:        "rose-studio-6bd73.firebaseapp.com",
+  projectId:         "rose-studio-6bd73",
+  storageBucket:     "rose-studio-6bd73.firebasestorage.app",
+  messagingSenderId: "1036572330406",
+  appId:             "1:1036572330406:web:6d710287d8b4dc29c72767"
 };
