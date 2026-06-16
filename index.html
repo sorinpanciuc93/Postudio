@@ -370,7 +370,7 @@ function viewLogin(){return `<div class="screen"><div class="logo">🌷</div><h2
     <input type="text" id="loginName" placeholder="Username" autocapitalize="none" autocorrect="off" autocomplete="username"/>
     <input type="password" id="loginCode" class="code-in" inputmode="numeric" placeholder="• • • •" style="margin-top:10px"/>
     <button class="btn-primary" id="loginBtn">Enter</button>
-    <p class="note">Manager? Just enter your code. Don’t have a code? Ask your manager.</p>
+    <p class="note">Manager? Log in as <b>admin</b> with your code. No code? Ask your manager.</p>
   </div></div>`;}
 
 /* ---------- employee dashboard ---------- */
@@ -570,11 +570,15 @@ function bind(){
   }
   const uf=$("#userForm");
   if(uf){
-    uf.onsubmit=e=>{e.preventDefault();const id=uf.dataset.id,isNew=uf.dataset.new==="true";const code=$("#uCode").value.trim();
+    uf.onsubmit=e=>{e.preventDefault();const id=uf.dataset.id,isNew=uf.dataset.new==="true";
+      const uname=$("#uName").value.trim();const code=$("#uCode").value.trim();
+      if(!uname)return toast("Give them a username");
+      if(uname.toLowerCase()==="admin")return toast("'admin' is reserved for the manager");
       if(!code)return toast("Give them a code");
       if(code===cfg.adminCode)return toast("That’s the manager code — pick another");
       if((cfg.users||[]).some(u=>u.code===code&&u.id!==id))return toast("Code already used");
-      const usr={id,name:$("#uName").value.trim()||"Member",code,accountIds:[...uf.querySelectorAll('[data-acc]:checked')].map(x=>x.dataset.acc)};
+      if((cfg.users||[]).some(u=>(u.name||"").trim().toLowerCase()===uname.toLowerCase()&&u.id!==id))return toast("Username already used");
+      const usr={id,name:uname,code,accountIds:[...uf.querySelectorAll('[data-acc]:checked')].map(x=>x.dataset.acc)};
       cfg.users=cfg.users||[];if(isNew)cfg.users.push(usr);else cfg.users[cfg.users.findIndex(x=>x.id===id)]=usr;
       saveConfig();toast("Saved");adminTab="team";route={name:"admin"};render();};
     if($("#delUser"))$("#delUser").onclick=()=>{if(confirm("Remove this member?")){
@@ -585,8 +589,8 @@ function bind(){
 function tryLogin(username,code){
   username=(username||"").trim();code=(code||"").trim();
   if(!username&&!code)return;
-  // manager logs in with the manager code alone
-  if(cfg.adminCode&&code===cfg.adminCode){session={role:"admin"};saveSession();route={name:"dash"};return render();}
+  // manager logs in with username "admin" + the manager code
+  if(username.toLowerCase()==="admin"&&cfg.adminCode&&code===cfg.adminCode){session={role:"admin"};saveSession();route={name:"dash"};return render();}
   // team member must match BOTH username and code
   const u=(cfg.users||[]).find(x=>x.code&&x.code===code&&(x.name||"").trim().toLowerCase()===username.toLowerCase());
   if(u){session={role:"emp",userId:u.id};saveSession();route={name:"dash"};return render();}
