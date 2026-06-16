@@ -629,9 +629,15 @@ function loadScript(src){return new Promise((res,rej)=>{const s=document.createE
 async function renderReportCanvas(){
   const el=$("#reportCapture"); if(!el) throw new Error("no report");
   if(!window.html2canvas) await loadScript("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js");
-  const wide=el.scrollHeight>4000;            // very tall monthly reports: ease scale to stay within canvas limits
-  return await window.html2canvas(el,{backgroundColor:"#FFF5F7",scale:wide?2:3,useCORS:true,logging:false,
-    windowWidth:el.scrollWidth});
+  // push quality as high as possible (up to 4x) while staying under the browser canvas size limit
+  const sh=el.scrollHeight||1, sw=el.scrollWidth||1;
+  let scale=Math.min(4, 15000/sh, 15000/sw); if(scale<1.5)scale=1.5;
+  return await window.html2canvas(el,{backgroundColor:"#FFF5F7",scale,useCORS:true,logging:false,windowWidth:sw});
+}
+function slugify(s){return (s||"").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-+|-+$/g,"");}
+function reportFileBase(){
+  const names=visibleAccounts().filter(a=>reportAccIds.includes(a.id)).map(a=>slugify(a.name)).filter(Boolean).join("-");
+  return "Rose-Studio_"+slugify(reportLabel)+(names?("_"+names):"");
 }
 async function shareOrDownload(file,blob,doneMsg){
   try{
@@ -646,9 +652,10 @@ async function shareImage(){
   toast("Preparing image…");
   try{
     const canvas=await renderReportCanvas();
+    const fname=reportFileBase()+".png";
     canvas.toBlob(async blob=>{
       if(!blob)return toast("Couldn’t build image");
-      await shareOrDownload(new File([blob],"Rose-Studio-report.png",{type:"image/png"}),blob,"Image saved");
+      await shareOrDownload(new File([blob],fname,{type:"image/png"}),blob,"Image saved");
     },"image/png");
   }catch(e){ toast("Export unavailable — check your connection"); }
 }
@@ -661,12 +668,12 @@ async function sharePDF(){
     const pdf=new jsPDF("p","mm","a4");
     const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight();
     const iw=pw, ih=canvas.height*iw/canvas.width;
-    const img=canvas.toDataURL("image/jpeg",0.92);
+    const img=canvas.toDataURL("image/jpeg",0.96);
     let position=0, heightLeft=ih;
-    pdf.addImage(img,"JPEG",0,position,iw,ih); heightLeft-=ph;
-    while(heightLeft>0){ position-=ph; pdf.addPage(); pdf.addImage(img,"JPEG",0,position,iw,ih); heightLeft-=ph; }
+    pdf.addImage(img,"JPEG",0,position,iw,ih,undefined,"FAST"); heightLeft-=ph;
+    while(heightLeft>0){ position-=ph; pdf.addPage(); pdf.addImage(img,"JPEG",0,position,iw,ih,undefined,"FAST"); heightLeft-=ph; }
     const blob=pdf.output("blob");
-    await shareOrDownload(new File([blob],"Rose-Studio-report.pdf",{type:"application/pdf"}),blob,"PDF saved");
+    await shareOrDownload(new File([blob],reportFileBase()+".pdf",{type:"application/pdf"}),blob,"PDF saved");
   }catch(e){ toast("PDF export unavailable — check your connection"); }
 }
 
