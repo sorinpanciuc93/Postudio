@@ -147,11 +147,26 @@ label.fld{display:block;font-size:12px;font-weight:700;letter-spacing:.04em;text
 </style>
 </head>
 <body>
-<div id="app"><div class="screen"><div class="logo">🌷</div><p>Loading…</p></div></div>
+<div id="app"><div class="screen"><div class="logo">🌷</div><p id="load-status">Loading…</p></div></div>
 <div id="toast"></div>
 
+<script>
+// runs before the module — if you see "JS ok" but still loading, the module has a syntax error
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    const s = document.getElementById('load-status');
+    if (s && s.textContent === 'Loading…') s.textContent = 'Loading… (plain JS ok, module may have error)';
+  }, 3000);
+});
+window.onerror = (msg, src, line, col, err) => {
+  const s = document.getElementById('load-status');
+  if (s) s.textContent = 'Error: ' + msg + ' (line ' + line + ')';
+};
+</script>
 <script src="firebase-config.js"></script>
 <script type="module">
+// module start marker
+document.getElementById('load-status').textContent = 'Module started…';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, setDoc, onSnapshot, increment }
