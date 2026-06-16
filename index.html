@@ -1,4 +1,3 @@
-<!-- v6-clean -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -65,7 +64,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
 .cat-tile{background:var(--surface);border-radius:var(--radius-sm);box-shadow:var(--shadow);
   border:1px solid var(--line);padding:14px 12px 12px;display:flex;flex-direction:column;gap:6px;
-  cursor:pointer;transition:transform .12s ease;-webkit-user-select:none;user-select:none;position:relative}
+  cursor:pointer;transition:transform .12s ease;-webkit-user-select:none;user-select:none}
 .cat-tile:active{transform:scale(.96)}
 .cat-tile.complete{background:linear-gradient(135deg,#FFFDF8,#FFF6E9)}
 .ct-top{display:flex;align-items:center;justify-content:space-between}
@@ -152,14 +151,11 @@ label.fld{display:block;font-size:12px;font-weight:700;letter-spacing:.04em;text
 <div id="toast"></div>
 
 <script src="firebase-config.js"></script>
-<script>
-setTimeout(function(){
-  var p=document.querySelector('#app p');
-  if(p&&p.textContent.indexOf('Loading')>-1)
-    document.getElementById('app').innerHTML='<div class="screen"><div class="logo">💔</div><h2 class="serif">Can\'t connect</h2><p>Firebase is not responding. Check your internet connection and reload.</p><button class="btn-primary" style="max-width:200px;margin:0 auto" onclick="location.reload()">Retry</button></div>';
-},15000);
-</script>
 <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, setDoc, onSnapshot, increment }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ---------- constants ---------- */
 const CATS = [
@@ -178,7 +174,6 @@ const FC = window.FIREBASE_CONFIG;
 const USE_FB = !!(FC && !/PASTE/.test(FC.apiKey || "PASTE"));
 let backend = USE_FB ? "fb" : "local";
 let db, auth, progUnsub = null;
-let _doc, _setDoc, _onSnapshot, _increment;
 
 /* ---------- state ---------- */
 let cfg = null;
@@ -214,33 +209,19 @@ function currentUserName(){
 /* ============================================================ DATA LAYER */
 if(USE_FB) bootFB(); else bootLocal();
 
-function _status(msg){var p=document.querySelector('#app p');if(p)p.textContent=msg;}
 async function bootFB(){
   try{
-    _status('Step 1: loading scripts…');
-    const m1=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
-    _status('Step 2: auth module…');
-    const m2=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
-    _status('Step 3: firestore module…');
-    const m3=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-    _status('Step 4: initializing…');
-    _doc=m3.doc; _setDoc=m3.setDoc; _onSnapshot=m3.onSnapshot; _increment=m3.increment;
-    const app=m1.initializeApp(FC); auth=m2.getAuth(app); db=m3.getFirestore(app);
-    _status('Step 5: signing in…');
-    await m2.signInAnonymously(auth);
-    _status('Step 6: loading config…');
-    _onSnapshot(_doc(db,"studio","config"),
+    const app=initializeApp(FC); auth=getAuth(app); db=getFirestore(app);
+    await signInAnonymously(auth);
+    onSnapshot(doc(db,"studio","config"),
       s=>applyConfig(s.exists()?s.data():null),
       err=>{route={name:"error",msg:err.message};render();});
     subscribeProgressFB();
-  }catch(e){
-    route={name:"error",msg:"Firebase error at: "+document.querySelector('#app p')?.textContent+" → "+e.message};
-    render();
-  }
+  }catch(e){ route={name:"error",msg:e.message}; render(); }
 }
 function subscribeProgressFB(){
   today=todayStr(); if(progUnsub)progUnsub();
-  progUnsub=_onSnapshot(_doc(db,"studio","progress-"+today), s=>applyProgress(s.exists()?s.data():null));
+  progUnsub=onSnapshot(doc(db,"studio","progress-"+today), s=>applyProgress(s.exists()?s.data():null));
 }
 function bootLocal(){
   applyConfig(localCfg());
@@ -274,7 +255,7 @@ function routeAfterConfig(){
 }
 
 async function saveConfig(){
-  if(backend==="fb"){ try{ await _setDoc(_doc(db,"studio","config"), cfg); }catch(e){ toast("Save failed"); } }
+  if(backend==="fb"){ try{ await setDoc(doc(db,"studio","config"), cfg); }catch(e){ toast("Save failed"); } }
   else { localStorage.setItem("rs.cfg", JSON.stringify(cfg)); applyConfig(cfg); }
 }
 async function createStudio(code){
@@ -287,8 +268,8 @@ async function tick(accId,cat,d){
   prog.byAccount[accId][cat]=Math.max(0,(prog.byAccount[accId][cat]||0)+d);
   render();
   if(backend==="fb"){
-    try{ await _setDoc(_doc(db,"studio","progress-"+today),
-      {date:today, byAccount:{[accId]:{[cat]:_increment(d)}}}, {merge:true}); }
+    try{ await setDoc(doc(db,"studio","progress-"+today),
+      {date:today, byAccount:{[accId]:{[cat]:increment(d)}}}, {merge:true}); }
     catch(e){ toast("Couldn’t sync — check connection"); }
   } else { prog.date=today; localStorage.setItem("rs.prog-"+today, JSON.stringify(prog)); }
 }
@@ -355,26 +336,26 @@ function viewEmployeeDash(){
 /* ---------- account detail ---------- */
 function viewAccount(accId){
   const a=(cfg.accounts||[]).find(x=>x.id===accId);
-  if(!a){route={name:”dash”};return render(),””;}
+  if(!a){route={name:"dash"};return render(),"";}
   const {goal,done}=acctTotals(a);
   const tiles=CATS.map(c=>{
-    const g=a.goals?.[c.key]||0,n=getCount(a.id,c.key),link=a.links?.[c.key]||””,ok=g>0&&n>=g,pct=g>0?Math.min(100,n/g*100):0;
-    return `<div class=”cat-tile ${ok?'complete':''}” ${link?('data-open=”'+esc(link)+'”'):''}>
-      <div class=”ct-top”><div class=”ct-emoji”>${c.emoji}</div>${ok?'<span class=”ct-check”>💛</span>':''}</div>
-      <div class=”ct-name”>${c.label}</div>
-      <div class=”ct-goal”>${g>0?('Goal · '+g):'No goal'}</div>
-      <div class=”ct-count”>${g>0?(n+'/'+g):n}</div>
-      ${g>0?`<div class=”progress-track”><div class=”progress-fill” style=”width:${pct}%”></div></div>`:''}
-      <div class=”stepper” onclick=”event.stopPropagation()”>
-        <button data-step=”-1” data-cat=”${c.key}” data-acct=”${a.id}”>−</button>
-        <span class=”v”>${n}</span>
-        <button data-step=”1” data-cat=”${c.key}” data-acct=”${a.id}”>+</button>
-      </div></div>`;
-  }).join(“”);
-  return `<div class=”bar”><button class=”back” data-go=”dash”>‹</button>
-    <h1><span class=”sub”>${a.username?('@'+esc(a.username)):'Account'} · ${done}/${goal} today</span>${esc(a.name)}</h1></div>
-    <div class=”cat-grid”>${tiles}</div>
-    <p class=”note”>Tap a tile to open the content folder. Post it, then tap + to log it.</p>`;
+    const g=a.goals?.[c.key]||0,n=getCount(a.id,c.key),link=a.links?.[c.key]||"",ok=g>0&&n>=g,pct=g>0?Math.min(100,n/g*100):0;
+    return `<div class="cat-tile ${ok?'complete':''}" ${link?('data-open="'+esc(link)+'"'):''}>
+        <div class="ct-top"><div class="ct-emoji">${c.emoji}</div>${ok?'<span class="ct-check">💛</span>':''}</div>
+        <div class="ct-name">${c.label}</div>
+        <div class="ct-goal">${g>0?('Goal · '+g):'No goal'}</div>
+        <div class="ct-count">${g>0?(n+'/'+g):n}</div>
+        ${g>0?`<div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>`:''}
+        <div class="stepper" data-stop="1">
+          <button data-step="-1" data-cat="${c.key}" data-acct="${a.id}">−</button>
+          <span class="v">${n}</span>
+          <button data-step="1" data-cat="${c.key}" data-acct="${a.id}">+</button>
+        </div></div>`;
+  }).join("");
+  return `<div class="bar"><button class="back" data-go="dash">‹</button>
+    <h1><span class="sub">${a.username?('@'+esc(a.username)):'Account'} · ${done}/${goal} today</span>${esc(a.name)}</h1></div>
+    <div class="cat-grid">${tiles}</div>
+    <p class="note">Tap a tile to open its folder. Post it, then tap + to log it.</p>`;
 }
 
 /* ---------- admin dashboard (live overview) ---------- */
@@ -475,7 +456,8 @@ function bind(){
   document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{route={name:b.dataset.go};render();});
   document.querySelectorAll("[data-acct]").forEach(t=>t.onclick=()=>{route={name:"account",accId:t.dataset.acct};render();});
   document.querySelectorAll("[data-open]").forEach(b=>{b.onclick=()=>{const u=b.dataset.open;if(u)window.open(u,"_blank","noopener");};});
-  document.querySelectorAll("[data-step]").forEach(b=>b.onclick=()=>tick(b.dataset.acct,b.dataset.cat,+b.dataset.step));
+  document.querySelectorAll("[data-stop]").forEach(el=>el.onclick=e=>e.stopPropagation());
+  document.querySelectorAll("[data-step]").forEach(b=>b.onclick=e=>{e.stopPropagation();tick(b.dataset.acct,b.dataset.cat,+b.dataset.step);});
   if($("#who"))$("#who").onclick=()=>{if(confirm("Log out of "+currentUserName()+"?"))logout();};
 
   if($("#createBtn"))$("#createBtn").onclick=()=>{const a=$("#ac1").value.trim(),b=$("#ac2").value.trim();
