@@ -1,6 +1,6 @@
 {
-  "name": "Rosé Studio",
-  "short_name": "Rosé Studio",
+  "name": "Postudio",
+  "short_name": "Postudio",
   "description": "Daily content posting dashboard",
   "start_url": "./index.html",
   "scope": "./",

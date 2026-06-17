@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Rosé Studio</title>
+<title>Postudio</title>
 
 <link rel="manifest" href="manifest.webmanifest" />
 <meta name="theme-color" content="#3C6AA8" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-<meta name="apple-mobile-web-app-title" content="Rosé Studio" />
+<meta name="apple-mobile-web-app-title" content="Postudio" />
 <link rel="apple-touch-icon" href="icon-180.png" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -518,7 +518,7 @@ function viewBootstrap(){return `<div class="screen"><div class="logo">${LOGO}</
     <input type="password" id="ac2" class="code-in" inputmode="numeric" placeholder="Repeat code" style="margin-top:10px"/>
     <button class="btn-primary" id="createBtn">Create studio</button>
   </div></div>`;}
-function viewLogin(){return `<div class="screen"><div class="logo">${LOGO}</div><h2>Rosé Studio</h2>
+function viewLogin(){return `<div class="screen"><div class="logo">${LOGO}</div><h2>Postudio</h2>
   <p>Enter your username and code to see your accounts.</p>
   <div class="card">
     <input type="text" id="loginName" placeholder="Username" autocapitalize="none" autocorrect="off" autocomplete="username"/>
@@ -666,7 +666,7 @@ function viewReport(){
       <button class="btn-ghost" id="btnImg">🖼️ Share image</button>
       <button class="btn-primary" id="btnPDF" style="margin-top:0">📤 Share PDF</button></div>
     <div id="reportCapture">
-      <div class="report-head-card"><div class="rh-title">${LOGO_W} Rosé Studio</div>
+      <div class="report-head-card"><div class="rh-title">${LOGO_W} Postudio</div>
         <div class="rh-sub">${esc(reportLabel)} · Generated ${today}</div></div>
       ${body}
     </div>
@@ -684,12 +684,12 @@ async function renderReportCanvas(){
 function slugify(s){return (s||"").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-+|-+$/g,"");}
 function reportFileBase(){
   const names=visibleAccounts().filter(a=>reportAccIds.includes(a.id)).map(a=>slugify(a.name)).filter(Boolean).join("-");
-  return "Rose-Studio_"+slugify(reportLabel)+(names?("_"+names):"");
+  return "Postudio_"+slugify(reportLabel)+(names?("_"+names):"");
 }
 async function shareOrDownload(file,blob,doneMsg){
   try{
     if(navigator.canShare&&navigator.canShare({files:[file]})){
-      await navigator.share({files:[file],title:"Rosé Studio report",text:reportLabel}); return;
+      await navigator.share({files:[file],title:"Postudio report",text:reportLabel}); return;
     }
   }catch(e){ if(e&&e.name==="AbortError")return; }
   const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=file.name;a.click();
